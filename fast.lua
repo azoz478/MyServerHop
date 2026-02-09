@@ -1,30 +1,30 @@
+-- كود عزوز: قفز تلقائي كل 10 ثواني بدون توقف
+repeat task.wait() until game:IsLoaded() -- انتظر الماب يفتح
+
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local Player = game.Players.LocalPlayer
 
--- وظيفة البحث عن سيرفر جديد
-local function ServerHop()
-    local Api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
-    
-    local Success, Body = pcall(function()
-        return HttpService:JSONDecode(game:HttpGet(Api))
-    end)
-
-    if Success and Body.data then
-        for _, server in pairs(Body.data) do
-            if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Player)
-                return
+local function Jump()
+    local success, result = pcall(function()
+        -- يجيب قائمة بـ 100 سيرفر
+        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"))
+        
+        for _, s in pairs(servers.data) do
+            -- يختار سيرفر مو ممتلئ ومو سيرفرك الحالي
+            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, game.Players.LocalPlayer)
+                return true
             end
         end
+    end)
+    
+    if not success then
+        warn("⚠️ فشل النقل، بحاول ثانية...")
+        task.wait(2)
+        Jump()
     end
 end
 
--- حلقة التكرار (كل 10 ثوانٍ)
-task.spawn(function()
-    while true do
-        print("⏳ جاري الانتظار 10 ثوانٍ قبل القفز للسيرفر التالي...")
-        task.wait(10)
-        ServerHop()
-    end
-end)
+-- انتظر 10 ثواني بالضبط قبل ما تنتقل
+task.wait(10)
+Jump()
