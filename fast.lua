@@ -1,53 +1,39 @@
--- 1. الخدمات الأساسية
+print("1. Script Started!") -- بيطلع في الـ F9
+
+-- شاشة التحميل
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
+local LP = Players.LocalPlayer
+local SG = Instance.new("ScreenGui", LP.PlayerGui)
+local F = Instance.new("Frame", SG)
+F.Size = UDim2.new(0,200,0,50)
+F.Position = UDim2.new(0.5,-100,0.5,-25)
+F.BackgroundColor3 = Color3.new(0,0,0)
+local T = Instance.new("TextLabel", F)
+T.Size = UDim2.new(1,0,1,0)
+T.Text = "Loading Hub..."
+T.TextColor3 = Color3.new(1,1,1)
 
--- 2. إعداد شاشة التحميل (Loading Screen)
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-ScreenGui.Name = "AzozLoader"
+task.wait(2)
+SG:Destroy()
+print("2. Loading Finished!")
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 300, 0, 100)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Instance.new("UICorner", MainFrame)
+-- استدعاء المكتبة
+local success, err = pcall(function()
+    local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+    
+    local Window = OrionLib:MakeWindow({Name = "Azoz Hub", HidePremium = false, SaveConfig = true})
+    local Tab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998"})
+    
+    Tab:AddButton({
+        Name = "Server Hop",
+        Callback = function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId)
+        end    
+    })
+    
+    OrionLib:Init()
+end)
 
-local LoadingText = Instance.new("TextLabel", MainFrame)
-LoadingText.Size = UDim2.new(1, 0, 0, 50)
-LoadingText.Text = "Azoz Hub Loading..."
-LoadingText.TextColor3 = Color3.new(1, 1, 1)
-LoadingText.BackgroundTransparency = 1
-LoadingText.TextSize = 20
-LoadingText.Font = Enum.Font.GothamBold
-
--- أنيميشن الانتظار (3 ثواني)
-task.wait(3)
-ScreenGui:Destroy() -- حذف الشاشة وبدء السكربت
-
--- 3. تشغيل مكتبة التصميم (Orion Lib)
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-
--- 4. صنع النافذة والقوائم
-local Window = OrionLib:MakeWindow({
-    Name = "Azoz Hub | V1", 
-    HidePremium = false, 
-    SaveConfig = true, 
-    ConfigFolder = "OrionSettings"
-})
-
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- زر الـ Server Hop
-MainTab:AddButton({
-    Name = "Server Hop (الانتقال لسيرفر آخر)",
-    Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-    end    
-})
-
-OrionLib:Init()
+if not success then
+    print("Error Found: " .. err) -- لو فيه خطأ بيعلمنا هنا
+end
