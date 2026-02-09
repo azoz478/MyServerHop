@@ -1,77 +1,53 @@
--- Essential Services
-local TweenService = game:GetService("TweenService")
+-- 1. الخدمات الأساسية
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- 1. Create Loading UI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Loader"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+-- 2. إعداد شاشة التحميل (Loading Screen)
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+ScreenGui.Name = "AzozLoader"
 
-local MainFrame = Instance.new("Frame")
+local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 300, 0, 100)
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim2.new(0, 10)
+Instance.new("UICorner", MainFrame)
 
-local TextLabel = Instance.new("TextLabel")
-TextLabel.Size = UDim2.new(1, 0, 0, 50)
-TextLabel.Text = "Loading Hub..."
-TextLabel.TextColor3 = Color3.new(1, 1, 1)
-TextLabel.BackgroundTransparency = 1
-TextLabel.Font = Enum.Font.GothamBold
-TextLabel.TextSize = 20
-TextLabel.Parent = MainFrame
+local LoadingText = Instance.new("TextLabel", MainFrame)
+LoadingText.Size = UDim2.new(1, 0, 0, 50)
+LoadingText.Text = "Azoz Hub Loading..."
+LoadingText.TextColor3 = Color3.new(1, 1, 1)
+LoadingText.BackgroundTransparency = 1
+LoadingText.TextSize = 20
+LoadingText.Font = Enum.Font.GothamBold
 
-local BarBack = Instance.new("Frame")
-BarBack.Size = UDim2.new(0, 260, 0, 10)
-BarBack.Position = UDim2.new(0.5, -130, 0.7, 0)
-BarBack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-BarBack.Parent = MainFrame
+-- أنيميشن الانتظار (3 ثواني)
+task.wait(3)
+ScreenGui:Destroy() -- حذف الشاشة وبدء السكربت
 
-local Bar = Instance.new("Frame")
-Bar.Size = UDim2.new(0, 0, 1, 0)
-Bar.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
-Bar.Parent = BarBack
+-- 3. تشغيل مكتبة التصميم (Orion Lib)
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Loading Animation (3 Seconds)
-local tween = TweenService:Create(Bar, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)})
-tween:Play()
+-- 4. صنع النافذة والقوائم
+local Window = OrionLib:MakeWindow({
+    Name = "Azoz Hub | V1", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "OrionSettings"
+})
 
-tween.Completed:Connect(function()
-    ScreenGui:Destroy() -- حذف شاشة التحميل بعد الانتهاء
-    
-    -- 2. NOW START ORION LIB (واجهة الأزرار حقك)
-    local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-    
-    local Window = OrionLib:MakeWindow({
-        Name = "Server Management", 
-        HidePremium = false, 
-        SaveConfig = true, 
-        ConfigFolder = "OrionSettings"
-    })
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    local MainTab = Window:MakeTab({
-        Name = "Main",
-        Icon = "rbxassetid://4483345998",
-        PremiumOnly = false
-    })
+-- زر الـ Server Hop
+MainTab:AddButton({
+    Name = "Server Hop (الانتقال لسيرفر آخر)",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end    
+})
 
-    MainTab:AddButton({
-        Name = "Server Hop (20 Seconds)",
-        Callback = function()
-            OrionLib:MakeNotification({
-                Name = "System Message",
-                Content = "Teleporting to a new server in 20 seconds...",
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
-            task.wait(20)
-            local ts = game:GetService("TeleportService")
-            ts:Teleport(game.PlaceId, game.Players.LocalPlayer)
-        end    
-    })
-
-    OrionLib:Init()
-end)
+OrionLib:Init()
