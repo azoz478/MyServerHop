@@ -1,32 +1,33 @@
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local PlaceId = game.PlaceId
-local JobId = game.JobId
+local Player = game.Players.LocalPlayer
 
-local function teleportToNewServer()
-    -- الرابط المخصص لجلب قائمة السيرفرات المتاحة للعبة
-    local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+-- الرابط اللي يجيب قائمة السيرفرات المتاحة للماب
+local Api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+
+local function ServerHop()
+    print("جاري البحث عن سيرفر جديد... 🔍")
     
-    local success, result = pcall(function()
-        return HttpService:JSONDecode(game:HttpGet(url))
+    local Success, Body = pcall(function()
+        return HttpService:JSONDecode(game:HttpGet(Api))
     end)
 
-    if success and result.data then
-        for _, server in ipairs(result.data) do
-            -- التأكد من أن السيرفر ليس هو السيرفر الحالي وأن فيه مكاناً شاغراً
-            if server.id ~= JobId and server.playing < server.maxPlayers then
-                TeleportService:TeleportToPlaceInstance(PlaceId, server.id)
-                return -- توقف بمجرد إيجاد سيرفر
+    if Success and Body.data then
+        for _, server in pairs(Body.data) do
+            -- التأكد أن السيرفر ليس ممتلئاً وأنه ليس السيرفر الحالي
+            if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Player)
+                return
             end
         end
-    else
-        warn("فشل في جلب قائمة السيرفرات، سأحاول مرة أخرى...")
     end
 end
 
--- تكرار العملية كل 10 ثوانٍ
-while true do
-    task.wait(10) 
-    print("جاري البحث عن سيرفر جديد...")
-    teleportToNewServer()
-end
+-- حلقة تكرار كل 20 ثانية
+task.spawn(function()
+    while true do
+        print("تنبيه: سيتم تغيير السيرفر بعد 20 ثانية ⏳")
+        task.wait(20)
+        ServerHop()
+    end
+end)
