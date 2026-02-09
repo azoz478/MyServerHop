@@ -1,33 +1,32 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local PlaceId = game.PlaceId
+local JobId = game.JobId
 
--- 1. صنع الواجهة
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "MyCustomMenu" -- اسم السكربت في النظام
+local function teleportToNewServer()
+    -- الرابط المخصص لجلب قائمة السيرفرات المتاحة للعبة
+    local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+    
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(game:HttpGet(url))
+    end)
 
--- 2. إطار القائمة (المربع)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 250, 0, 150)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
-MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- لون الخلفية
-Instance.new("UICorner", MainFrame) -- عشان الزوايا تكون دائرية
+    if success and result.data then
+        for _, server in ipairs(result.data) do
+            -- التأكد من أن السيرفر ليس هو السيرفر الحالي وأن فيه مكاناً شاغراً
+            if server.id ~= JobId and server.playing < server.maxPlayers then
+                TeleportService:TeleportToPlaceInstance(PlaceId, server.id)
+                return -- توقف بمجرد إيجاد سيرفر
+            end
+        end
+    else
+        warn("فشل في جلب قائمة السيرفرات، سأحاول مرة أخرى...")
+    end
+end
 
--- 3. العنوان (هنا حط اسمك!)
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Text = "قائمة عزوز" -- اكتب اسمك هنا
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-
--- 4. زر تجريبي (تقدر تسميه بكيفك)
-local MyButton = Instance.new("TextButton", MainFrame)
-MyButton.Size = UDim2.new(0, 200, 0, 45)
-MyButton.Position = UDim2.new(0.5, -100, 0.5, 10)
-MyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
-MyButton.Text = "اضغط هنا يا وحش" -- سمِّ الزر هنا
-MyButton.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", MyButton)
-
-print("قائمتك الجديدة جاهزة!")
+-- تكرار العملية كل 10 ثوانٍ
+while true do
+    task.wait(10) 
+    print("جاري البحث عن سيرفر جديد...")
+    teleportToNewServer()
+end
