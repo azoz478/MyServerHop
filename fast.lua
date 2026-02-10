@@ -1,41 +1,33 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
 
-local speed = 2 -- سرعة الكاميرا
-local active = true
-
--- فصل الكاميرا عن اللاعب
 camera.CameraType = Enum.CameraType.Scriptable
 
-RunService.RenderStepped:Connect(function()
-    if not active then return end
-    
-    local lookVector = camera.CFrame.LookVector
-    local rightVector = camera.CFrame.RightVector
-    
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-        camera.CFrame = camera.CFrame + (lookVector * speed)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-        camera.CFrame = camera.CFrame - (lookVector * speed)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-        camera.CFrame = camera.CFrame - (rightVector * speed)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-        camera.CFrame = camera.CFrame + (rightVector * speed)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.E) then
-        camera.CFrame = camera.CFrame + Vector3.new(0, speed, 0)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-        camera.CFrame = camera.CFrame - Vector3.new(0, speed, 0)
-    end
+local speed = 2
+local moving = {W = false, S = false, A = false, D = false, Q = false, E = false}
+
+-- رصد الأزرار
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    local key = input.KeyCode.Name
+    if moving[key] ~= nil then moving[key] = true end
 end)
 
-print("🎥 الكاميرا شغالة! استخدم WASD و Q-E للطيران")
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    local key = input.KeyCode.Name
+    if moving[key] ~= nil then moving[key] = false end
+end)
+
+-- تحديث الحركة كل فريم
+game:GetService("RunService").RenderStepped:Connect(function()
+    local cf = camera.CFrame
+    if moving.W then cf = cf * CFrame.new(0, 0, -speed) end
+    if moving.S then cf = cf * CFrame.new(0, 0, speed) end
+    if moving.A then cf = cf * CFrame.new(-speed, 0, 0) end
+    if moving.D then cf = cf * CFrame.new(speed, 0, 0) end
+    if moving.E then cf = cf * CFrame.new(0, speed, 0) end
+    if moving.Q then cf = cf * CFrame.new(0, -speed, 0) end
+    camera.CFrame = cf
+end)
+
+print("🎥 طير بالكاميرا الحين.. WASD للمشي والماوس للالتفات!")
