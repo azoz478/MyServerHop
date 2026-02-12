@@ -18,7 +18,7 @@ frame.Active = true
 
 local status = Instance.new("TextLabel", frame)
 status.Size = UDim2.new(1, 0, 1, 0)
-status.Text = "Azoz Hub: جاري الفرم..."
+status.Text = "Azoz Hubجاري الفارم ."
 status.TextColor3 = Color3.new(1, 1, 1)
 status.BackgroundTransparency = 1
 status.TextSize = 18
